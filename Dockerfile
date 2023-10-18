@@ -1,5 +1,4 @@
-
-# Use the official OpenJDK base image with Java 17
+# Use the official OpenJDK base image with Java 11
 FROM openjdk:11-jdk
 
 # Set the working directory in the container

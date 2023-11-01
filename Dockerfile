@@ -1,14 +1,9 @@
-# Use the official OpenJDK base image with Java 11
-FROM openjdk:11-jdk
+FROM openjdk:11
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the JAR file from the host to the container
-COPY target/maintestdevops.jar /app/maintestdevops.jar
+COPY http://192.168.1.100:8081/repository/maven-releases/maintestdevops.jar /app/maintestdevops.jar
 
-# Expose the port that your Spring Boot application listens on (change as needed)
 EXPOSE 8082
 
-# Command to run your Spring Boot application
 CMD ["java", "-jar", "maintestdevops.jar"]

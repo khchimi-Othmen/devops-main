@@ -1,10 +1,10 @@
 FROM openjdk:11
 
+COPY maintestdevops.jar /app/maintestdevops.jar
+
+RUN curl -o maintestdevops.jar http://${NEXUS_URL}/repository/${REPOSITORY_ID}/${REPOSITORY_ID}/${env.DOCKER_TAG}/maintestdevops-${env.DOCKER_TAG}.jar
+
 WORKDIR /app
-
-ADD maintestdevops.jar /app/maintestdevops.jar
-
-RUN curl -o maintestdevops.jar http://192.168.1.100:8081/service/rest/repository/browse/maven-releases/tn/esprit/DevOps_Project/2.1/DevOps_Project-2.1.jar
 
 EXPOSE 8082
 

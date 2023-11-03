@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   mysql-container:
-    image: mysql
+    image: mysql:5.7
     container_name: mysql-container
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -18,7 +18,7 @@ services:
   spring-app-container:
     depends_on:
       - mysql-container
-    image: maintestdevops:latest
+    image: khchimiothmen/maintestdevops:latest
     container_name: spring-app-container
     restart: on-failure
     ports:

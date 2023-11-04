@@ -11,9 +11,9 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - my-network
+      - app-network
     volumes:
-      - mysql-data:/var/lib/mysql  # Define a volume for MySQL data
+      - mysql-data:/var/lib/mysql
 
   spring-app-container:
     depends_on:
@@ -24,14 +24,18 @@ services:
     ports:
       - "8082:8082"
     networks:
-      - my-network
-    volumes:
-      - spring-app-data:/path/to/app/data  # Define a volume for your Spring app data
+      - app-network
+
+  angular-app:
+    image: khchimiothmen/summer-workshop-angular:latest
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   mysql-data:
-  spring-app-data:
-
-networks:
-  my-network:
-    name: my-network

@@ -7,9 +7,9 @@ import tn.esprit.devops_project.entities.ActivitySector;
 import tn.esprit.devops_project.services.Iservices.IActivitySector;
 
 import java.util.List;
-
 @RestController
 @AllArgsConstructor
+@CrossOrigin(origins = "*")
 public class ActivitySectorController {
 
     IActivitySector activitySectorService;

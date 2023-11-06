@@ -5,10 +5,10 @@ FROM openjdk:11-jdk
 WORKDIR /app
 
 # Copy the JAR file from the host to the container
-COPY target/DevOps_Project-2.1.jar /app/DevOps_Project-2.1.jar
+COPY target/DevOps_Project-2.1.jar /app/maintestdevops.jar
 
 # Expose the port that your Spring Boot application listens on (change as needed)
 EXPOSE 8082
 
 # Command to run your Spring Boot application
-CMD ["java", "-jar", "DevOps_Project-2.1.jar"]
+CMD ["java", "-jar", "maintestdevops.jar"]

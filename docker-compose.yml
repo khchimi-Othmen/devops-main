@@ -26,17 +26,15 @@ services:
       - "8082:8082"
     networks:
       - app-network
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/devops
+
 
   angular-app:
     image: khchimiothmen/main-devops-front:latest
     ports:
-      - "4200:80"
+      - "4200:4200"
     networks:
       - app-network
-    environment:
-      - BACKEND_URL=http://192.168.1.100:8082
+
 networks:
   app-network:
     driver: bridge

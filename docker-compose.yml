@@ -12,6 +12,7 @@ services:
       - "3306:3306"
     networks:
       - app-network
+
     volumes:
       - mysql-data:/var/lib/mysql
 
@@ -25,6 +26,8 @@ services:
       - "8082:8082"
     networks:
       - app-network
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/devops
 
   angular-app:
     image: khchimiothmen/summer-workshop-angular:latest
@@ -32,7 +35,8 @@ services:
       - "4200:80"
     networks:
       - app-network
-
+    environment:
+      - BACKEND_URL=http://192.168.1.100:8082
 networks:
   app-network:
     driver: bridge

@@ -5,13 +5,13 @@ FROM openjdk:11-jdk
 WORKDIR /app
 
 # Copy the JAR file from the host to the container
-COPY target/DevOps_Project-2.1.jar /app/maintestdevops.jar
+COPY target/DevOps_Project-2.1.jar /app/main-devops-back.jar
 
 # Expose the port that your Spring Boot application listens on (change as needed)
 EXPOSE 8082
 
 # Command to run your Spring Boot application
-CMD ["java", "-jar", "maintestdevops.jar"]
+CMD ["java", "-jar", "main-devops-back.jar"]
 #FROM openjdk:11
 #EXPOSE 8082
 #RUN curl -O http://192.168.1.100:8081/repository/maven-releases/tn/esprit/DevOps_Project/2.1/DevOps_Project-2.1.jar

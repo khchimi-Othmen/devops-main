@@ -14,6 +14,5 @@
 #CMD ["java", "-jar", "maintestdevops.jar"]
 FROM openjdk:11
 EXPOSE 8082
-#ADD target/gestion-station-ski-1.0.jar gestion-station-ski-1.0.jar
-RUN curl -O http://192.168.1.100:8081/repository/maven-releases/tn/esprit/DevOps_Project/2.1/DevOps_Project-2.1111.jar
+RUN curl -O http://192.168.1.100:8081/repository/maven-releases/tn/esprit/DevOps_Project/2.1/DevOps_Project-2.1.jar
 ENTRYPOINT ["java","-jar","/DevOps_Project-2.1.jar"]

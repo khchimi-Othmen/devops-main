@@ -19,7 +19,7 @@ services:
   spring-app-container:
     depends_on:
       - mysql-container
-    image: khchimiothmen/main-devops-back2:latest
+    image: khchimiothmen/devops-last-back:bahya
     container_name: spring-app-container
     restart: on-failure
     ports:
@@ -29,7 +29,7 @@ services:
 
 
   angular-app:
-    image: khchimiothmen/main-devops-front2:latest
+    image: khchimiothmen/devops-last-front:latest
     ports:
       - "4200:4200"
     networks:

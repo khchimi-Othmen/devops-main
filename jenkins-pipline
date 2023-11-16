@@ -1,0 +1,211 @@
+pipeline {
+    agent any
+
+    environment {
+            SONARQUBE_SERVER = 'http://192.168.1.100:9000/'
+            SONARQUBE_TOKEN = credentials('jenkins-sonar4')
+            NEXUS_CREDENTIALS = credentials('jenkins-nexus')
+            DOCKERHUB_CREDENTIALS = credentials('dockerhub-pwd')
+            DOCKER_IMAGE_NAME = "$DOCKERHUB_CREDENTIALS_USR/devops-last-back:latest"
+            GRAFANA_API_KEY = credentials('grafana-jenkins')
+            GRAFANA_URL = 'http://192.168.1.100:3000'
+
+        }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git(url: 'https://github.com/khchimi-Othmen/devops-main.git', branch: 'master')
+            }
+        }
+
+
+
+        stage('Build the application') {
+            steps {
+                script {
+                    // Build the application and run Jacoco
+                    sh 'mvn clean'
+                    sh 'mvn -B package -DskipTests --file pom.xml '
+                }
+            }
+        }
+        // stage('JUnit & Mockito Tests') {
+        //     steps {
+        //         script {
+        //             sh 'mvn -B test --file pom.xml'
+        //         }
+        //     }
+        // }
+        stage('Jacoco') {
+            steps {
+
+                sh 'mvn jacoco:report'
+                    jacoco( 
+                          execPattern: 'target/*.exec',
+                          classPattern: 'target/classes',
+                          sourcePattern: 'src/main/java',
+                          exclusionPattern: 'src/test*'
+                    )
+                }
+            }
+            
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    // Run SonarQube analysis with Jacoco coverage reports
+                    withSonarQubeEnv('MySonarQubeServer') {
+                        sh 'mvn sonar:sonar -Dsonar.login=squ_cc09373d8b8fad47c619482d8f2e987efd65be25 -Dsonar.java.binaries=target/classes'
+                    }
+                }
+            }
+        }
+
+
+        
+        stage('Deploy to Nexus') {
+            steps {
+                script {
+                    sh "mvn deploy --global-settings /usr/share/maven/conf/settings.xml -DaltDeploymentRepository=deploymentRepo::default::http://192.168.1.100:8081/repository/maven-releases/ -DskipTests"
+                }
+            }
+        }
+        
+        stage('Generate Docker Tag') {
+                    steps {
+                        script {
+                            // Generate a Docker tag based on the current date and time
+                            def timestamp = sh(script: 'date +\'%Y%m%d%H%M%S\'', returnStdout: true).trim()
+                            currentBuild.description = "Docker tag: $timestamp"
+                            env.DOCKER_TAG = timestamp
+                        }
+                    }
+                }
+
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // sh 'curl -O http://192.168.1.100:8081/repository/maven-releases/tn/esprit/DevOps_Project/2.1/DevOps_Project-2.1.jar'
+
+                    // Build a Docker image and tag it
+                    sh "docker build -t khchimiothmen/devops-last-back:${env.DOCKER_TAG} ."
+                }
+            }
+        }
+        
+
+        stage('Start Docker Compose') {
+            steps {
+                script {
+                    try {
+                        // Start Docker Compose services in detached mode
+                        sh 'docker-compose up -d'
+                        echo 'Docker Compose services started.'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("An error occurred: ${e.message}")
+                    }
+                }
+            }
+        }
+
+
+        stage('Verify Grafana Dashboard') {
+            steps {
+                // Query the Grafana API to verify that the dashboard was deployed successfully
+                sh """
+        curl -X GET \
+          -H "Authorization: Bearer ${env.GRAFANA_API_KEY}" \
+          "${env.GRAFANA_URL}/api/dashboards/db/${env.GRAFANA_DASHBOARD_UID}"
+                """
+        
+                // Send a request to the dashboard URL to verify that it is accessible
+                sh """
+        curl -X GET \
+          "${env.GRAFANA_URL}/d/${env.GRAFANA_DASHBOARD_UID}"
+                """
+            }
+        }
+
+
+        
+
+
+
+
+        stage('Docker Hub Login') {
+            steps {
+                script {
+                    // Use Docker PAT for login
+                    sh 'docker login -u khchimiothmen -p dckr_pat_gQ121gpbK7-AoCzAQLOhlrkROh0'
+                }
+            }
+        }
+
+
+
+        
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    // Push the Docker image to Docker Hub
+                    sh "docker push khchimiothmen/devops-last-back:${env.DOCKER_TAG}"
+                }
+            }
+        }
+        
+        
+
+        
+    stage('Email') {
+    steps {
+        script {
+            def subject = "Pipeline ${currentBuild.number} - ${currentBuild.result}"
+            def body = """<p>Hi,</p>
+                          <p>The pipeline has ${currentBuild.result}</p>
+                          <p>Details:</p>
+                          <ul>
+                              <li>Build URL: ${env.BUILD_URL}</li>
+                              <li>Grafana Dashboard: ${env.GRAFANA_URL}/d/${env.GRAFANA_DASHBOARD_UID}</li>
+                              <li>Other stages...</li>
+                          </ul>"""
+
+                emailext(
+                    to: 'haamahama2@gmail.com',  // Add the recipient's email address
+                    subject: subject,
+                    mimeType: 'text/html',
+                    body: body,
+                    attachLog: true,
+                    compressLog: true,
+                    replyTo: 'othmen.khchimi@esprit.tn'  // Set a reply-to address if needed
+                )
+            }
+        }
+    }
+    
+        stage('Sleep') {
+            steps {
+                sh 'sleep 55m'
+            }
+        }
+
+    }
+      post {
+        always {
+            // Clean up: remove Docker Compose images and containers
+            // sh 'docker-compose down --volumes --remove-orphans'
+            // sh 'docker system prune -f'
+            sh 'docker-compose down'
+
+            // Send notifications (adjust this part as needed)
+            catchError {
+                slackSend(
+                    color: currentBuild.resultIsBetterOrEqualTo('SUCCESS') ? 'good' : 'danger',
+                    message: "Jenkins build ${currentBuild.number} ${currentBuild.result}: ${env.JOB_URL}"
+                )
+            }
+        }
+    }
+}
